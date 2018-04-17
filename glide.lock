@@ -1,5 +1,5 @@
 hash: 7a57f3acea1f2e9ad541980fecae0c47f22798211031b43251d34f9826f8d54a
-updated: 2018-04-17T12:09:20.759378661-07:00
+updated: 2018-04-17T12:20:46.257895165-07:00
 imports:
 - name: github.com/beorn7/perks
   version: 3ac7bf7a47d159a033b107610db8a1b6575507a4
@@ -150,6 +150,12 @@ imports:
   version: a6e9df898b1336106c743392c48ee0b71f5c4efa
   subpackages:
   - xfs
+- name: github.com/quentin-m/etcd-cloud-operator
+  version: 378d8f2b829527561b5363691097994ed49e1f06
+  subpackages:
+  - pkg/providers
+  - pkg/providers/snapshot
+  - pkg/providers/snapshot/etcd
 - name: github.com/sirupsen/logrus
   version: f006c2ac4710855cf0f916dd6b77acf6b048dc6e
 - name: github.com/soheilhy/cmux
