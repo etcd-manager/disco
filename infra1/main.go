@@ -33,7 +33,7 @@ var (
 
 func main() {
 	go disco()
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), defaultStartRejoinTimeout)
 	defer cancel()
 
