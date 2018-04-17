@@ -79,6 +79,8 @@ func main() {
 	}
 
 	go runErrorWatcher(server)
+
+	select {}
 }
 
 func runErrorWatcher(server *embed.Etcd) {
