@@ -37,7 +37,7 @@ func main() {
 	// etcdCfg.PeerTLSInfo = c.cfg.PeerSC.TLSInfo()
 	etcdCfg.ClientAutoTLS = false
 	// etcdCfg.ClientTLSInfo = c.cfg.ClientSC.TLSInfo()
-	etcdCfg.InitialCluster = "infra1=http://127.0.0.1:2380"
+	etcdCfg.InitialCluster = fmt.Sprintf("infra1=%s", p1)
 	etcdCfg.LPUrls = []url.URL{*p1}
 	etcdCfg.APUrls = []url.URL{*p1}
 	etcdCfg.LCUrls = []url.URL{*c1}
