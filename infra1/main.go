@@ -14,6 +14,8 @@ import (
 	"github.com/coreos/etcd/embed"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc/grpclog"
+	"github.com/etcd-manager/disco/api"
+	"encoding/json"
 )
 
 const (
@@ -22,13 +24,16 @@ const (
 	defaultMemberCleanerInterval = 15 * time.Second
 )
 
+var (
+	c1, _ = url.Parse("http://127.0.0.1:2379")
+	p1, _ = url.Parse("http://127.0.0.1:2380")
+	m1, _ = url.Parse("http://127.0.0.1:2381")
+	d1 = "127.0.0.1:2382"
+)
+
 func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultStartRejoinTimeout)
 	defer cancel()
-
-	c1, _ := url.Parse("http://127.0.0.1:2379")
-	p1, _ := url.Parse("http://127.0.0.1:2380")
-	m1, _ := url.Parse("http://127.0.0.1:2381")
 
 	// Configure the server.
 	etcdCfg := embed.NewConfig()
@@ -77,6 +82,7 @@ func main() {
 	}
 
 	go runErrorWatcher(server)
+	go disco()
 
 	select {}
 }
@@ -104,6 +110,7 @@ func Stop(server *embed.Etcd, graceful, snapshot bool) {
 
 func disco() {
 	var srv http.Server
+	srv.Addr = d1
 
 	idleConnsClosed := make(chan struct{})
 	go func() {
@@ -121,7 +128,14 @@ func disco() {
 
 
 	mux := http.NewServeMux()
-	// mux.Handle("/api/", apiHandler{})
+	mux.HandleFunc("/ping", func(w http.ResponseWriter, req *http.Request) {
+		r := api.PingResponse{
+			PeerURL: p1.String(),
+			ClientURL: c1.String(),
+		}
+		data, _ := json.MarshalIndent(r, "", "  ")
+		w.Write(data)
+	})
 	mux.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
 		// The "/" pattern matches everything, so we need to check
 		// that we're at the root here.
