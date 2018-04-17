@@ -1,0 +1,4 @@
+package: github.com/etcd-manager/disco
+import:
+- package: github.com/coreos/etcd
+  version: v3.3.3
