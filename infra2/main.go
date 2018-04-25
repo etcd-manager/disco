@@ -25,11 +25,13 @@ const (
 )
 
 var (
+	n1 = "infra1"
 	// c1, _ = url.Parse("http://127.0.0.1:2379")
 	p1, _ = url.Parse("http://127.0.0.1:2380")
 	// m1, _ = url.Parse("http://127.0.0.1:2381")
 	// d1 = "127.0.0.1:2382"
 
+	n2 = "infra2"
 	c2, _ = url.Parse("http://127.0.0.2:2379")
 	p2, _ = url.Parse("http://127.0.0.2:2380")
 	m2, _ = url.Parse("http://127.0.0.2:2381")
@@ -45,13 +47,13 @@ func main() {
 	// Configure the server.
 	etcdCfg := embed.NewConfig()
 	etcdCfg.ClusterState = embed.ClusterStateFlagExisting
-	etcdCfg.Name = "infra2"
-	etcdCfg.Dir = "/tmp/infra2"
+	etcdCfg.Name = n2
+	etcdCfg.Dir = "/tmp/"+ n2
 	etcdCfg.PeerAutoTLS = false
 	// etcdCfg.PeerTLSInfo = c.cfg.PeerSC.TLSInfo()
 	etcdCfg.ClientAutoTLS = false
 	// etcdCfg.ClientTLSInfo = c.cfg.ClientSC.TLSInfo()
-	etcdCfg.InitialCluster = fmt.Sprintf("infra1=%s,infra2=%s", p1, p2)
+	etcdCfg.InitialCluster = fmt.Sprintf("%s=%s,%s=%s", n1, p1, n2, p2)
 	etcdCfg.LPUrls = []url.URL{*p2}
 	etcdCfg.APUrls = []url.URL{*p2}
 	etcdCfg.LCUrls = []url.URL{*c2}
