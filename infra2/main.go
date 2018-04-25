@@ -16,6 +16,7 @@ import (
 	"os/signal"
 	"github.com/etcd-manager/disco/api"
 	"encoding/json"
+	"strings"
 )
 
 const (
@@ -23,10 +24,19 @@ const (
 	defaultStartRejoinTimeout    = 60 * time.Second
 	defaultMemberCleanerInterval = 15 * time.Second
 )
+const (
+	defaultClientPort  = 2379
+	defaultPeerPort    = 2380
+	defaultMetricsPort = 2381
+
+	defaultDialTimeout    = 5 * time.Second
+	defaultRequestTimeout = 5 * time.Second
+	defaultAutoSync       = 1 * time.Second
+)
 
 var (
 	n1 = "infra1"
-	// c1, _ = url.Parse("http://127.0.0.1:2379")
+	c1, _ = url.Parse("http://127.0.0.1:2379")
 	p1, _ = url.Parse("http://127.0.0.1:2380")
 	// m1, _ = url.Parse("http://127.0.0.1:2381")
 	// d1 = "127.0.0.1:2382"
@@ -41,6 +51,52 @@ var (
 func main() {
 	go disco()
 
+	client, err := etcdcl.New(etcdcl.Config{
+		Endpoints:        []string{c1.String()},
+		DialTimeout:      defaultDialTimeout,
+		// TLS:              tc,
+		AutoSyncInterval: defaultAutoSync,
+	})
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	{
+		ctx, cancel := context.WithTimeout(context.Background(), defaultStartRejoinTimeout)
+		defer cancel()
+
+		resp, err := client.MemberAdd(ctx, []string{p2.String()})
+		if err != nil {
+			log.Fatalln(err)
+		}
+		fmt.Println(resp.Member.ID)
+	}
+
+	// Set the internal configuration.
+	initialPURLs := map[string]string{
+		n2: p2.String(),
+	}
+	{
+		ctx, cancel := context.WithTimeout(context.Background(), defaultStartRejoinTimeout)
+		defer cancel()
+
+		resp, err := client.MemberList(ctx)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		for _, member := range resp.Members {
+			if member.Name == "" {
+				continue
+			}
+			initialPURLs[member.Name] = member.PeerURLs[0]
+		}
+		fmt.Printf("%+v\n", initialPURLs)
+	}
+	var ic []string
+	for name, pURL := range initialPURLs {
+		ic = append(ic, fmt.Sprintf("%s=%s", name, pURL))
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), defaultStartRejoinTimeout)
 	defer cancel()
 
@@ -53,7 +109,7 @@ func main() {
 	// etcdCfg.PeerTLSInfo = c.cfg.PeerSC.TLSInfo()
 	etcdCfg.ClientAutoTLS = false
 	// etcdCfg.ClientTLSInfo = c.cfg.ClientSC.TLSInfo()
-	etcdCfg.InitialCluster = fmt.Sprintf("%s=%s,%s=%s", n1, p1, n2, p2)
+	etcdCfg.InitialCluster = strings.Join(ic, ",")
 	etcdCfg.LPUrls = []url.URL{*p2}
 	etcdCfg.APUrls = []url.URL{*p2}
 	etcdCfg.LCUrls = []url.URL{*c2}
